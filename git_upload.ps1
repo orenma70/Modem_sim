@@ -2,8 +2,8 @@
 git status
 
 
-$ver = "v2.2"
-$comment = " add dpd + pa   "
+$ver = "v2.3"
+$comment = " add dpd model   "
 
 
 # 2. בקשת אישור מהמשתמש

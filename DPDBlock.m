@@ -51,17 +51,39 @@ classdef DPDBlock
             end
         end
 
+
+        function obj = load_model(obj, model_file)
+            if exist(model_file, 'file')
+                % טעינה לתוך מבנה S
+                S = load(model_file);
+
+                % עכשיו אפשר לגשת למשתנה ששמרנו ב-train (נניח שקראנו לו coeffs_to_save)
+                if isfield(S, 'coeffs_to_save')
+                    obj.coeffs = S.coeffs_to_save;
+                elseif isfield(S, 'obj')
+                    % אם בטעות שמרת את ה-Object כולו
+                    obj.coeffs = S.obj.coeffs;
+                end
+
+                printf('Successfully loaded model from: %s\n', model_file);
+            else
+                error('File %s not found!', model_file);
+            end
+        end
+
         function obj = train(obj, x_in, y_out, gain)
           A = obj.create_matrix(y_out);
 
             % Lambda קטן מאוד (למשל 1e-6) עוזר ליציבות הנומרית
-            lambda = 1e-4;
+            lambda = 1e-6;
             [M, N_cols] = size(A);
 
             % פתרון Tikhonov Regularization (Ridge)
             % (A'A + lambda*I) * w = A' * x_in
             coeffs = (A' * A + lambda * eye(N_cols)) \ (A' * x_in(:));
             obj.coeffs =  coeffs * gain;
+            coeffs_to_save = obj.coeffs; % השמה למשתנה פשוט
+            save('-v7', 'dpd_model_voltera5x11.mat', 'coeffs_to_save');
         end
 
         function out = apply(obj, x)

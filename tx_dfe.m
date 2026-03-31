@@ -55,10 +55,10 @@ function dpd_out = tx_dfe(tx_in, config)
 
     % --- DPD (Digital Pre-Distortion) ---
     % יצירת אובייקט DPD (K=5, Q=3)
-    dpd_model = DPDBlock(5, 15);
+    dpd_model = DPDBlock(5, 11);
 
     % אימון המודל על 10,000 דגימות ראשונות
-    train_len = min(10000, length(cfr_out));
+    train_len = min(20000, length(cfr_out));
     x_in_train = cfr_out(1:train_len);
     x_in_train = x_in_train/norm(x_in_train);
     % קבלת דגימות מעוותות מה-PA לצורך הלמידה
@@ -68,9 +68,12 @@ function dpd_out = tx_dfe(tx_in, config)
     y_out_norm = pa_distorted_initial / (norm(pa_distorted_initial));
     % אימון ה-DPD (החזרת אובייקט מעודכן עם Coeffs)
     gain = adb20(my_rms_db(cfr_out));
-
-    dpd_model = dpd_model.train(x_in_train, y_out_norm, gain);
-
+    train_flag = false;
+    if train_flag
+      dpd_model = dpd_model.train(x_in_train, y_out_norm, gain);
+    else
+      dpd_model = dpd_model.load_model('dpd_model_voltera5x11.mat');
+    endif
     % יישום ה-DPD על כל אות ה-CFR
     dpd_out = dpd_model.apply(cfr_out);
 
