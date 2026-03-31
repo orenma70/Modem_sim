@@ -51,27 +51,24 @@ classdef DPDBlock
             end
         end
 
-        function obj = train(obj, x_in, y_out)
-            % Indirect Learning: מוצא את ההופכי של ה-PA
-            % x_in: הסיגנל המקורי (לפני ה-PA)
-            % y_out: הסיגנל אחרי ה-PA (מנורמל)
+        function obj = train(obj, x_in, y_out, gain)
+          A = obj.create_matrix(y_out);
 
-            A = obj.create_matrix(y_out);
+            % Lambda קטן מאוד (למשל 1e-6) עוזר ליציבות הנומרית
+            lambda = 1e-4;
+            [M, N_cols] = size(A);
 
-            % פתרון Least Squares ב-Octave (מקביל ל-scipy.linalg.lstsq)
-            % השימוש ב-A \ x_in פותר את (A' * A) * w = A' * x_in
-            obj.coeffs = A \ x_in(:);
+            % פתרון Tikhonov Regularization (Ridge)
+            % (A'A + lambda*I) * w = A' * x_in
+            coeffs = (A' * A + lambda * eye(N_cols)) \ (A' * x_in(:));
+            obj.coeffs =  coeffs * gain;
         end
 
         function out = apply(obj, x)
             % יישום ה-Pre-distortion על הסיגנל
-            if isempty(obj.coeffs)
-                out = x;
-                return;
-            end
-
             A = obj.create_matrix(x);
             out = A * obj.coeffs;
+            out = out.';
         end
     end
 end

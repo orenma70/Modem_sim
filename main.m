@@ -1,7 +1,7 @@
-clear; clc;
-
-% טעינת פרמטרים (הנחה: הגדרת את המשתנים ב-config_setup.m או טענת מ-mat)
-config_setup% למשל: config = load_cconfig_setuponfig();
+clc;
+close all
+clear;% טעינת פרמטרים (הנחה: הגדרת את המשתנים ב-config_setup.m או טענת מ-mat)
+config_setup  % למשל: config = load_cconfig_setuponfig();
 
 snr_db = 6;
 
@@ -33,9 +33,15 @@ all_tx_sig_processed = tx_dfe(all_tx_sig_mat, config);
 % Power Amplifier (PA)
 % pa_out = pa_amp(all_tx_sig_processed, 'rapp', 3, 1.2);
 pa_out = pa_amp(all_tx_sig_processed, 'volterra', [0.9, 0.1], [-0.04, -0.01]);
-pa_out = all_tx_sig_processed;
+
+
+[spectra, Pxx_ci, freq] = pwelch(pa_out, 2048, 0.5, 2048, 1996.8e6, 'twosided');
+%pa_out = all_tx_sig_processed;
 % Channel & Noise
-rx_sig_total = add_awgn(pa_out, snr_db);
+semilogy(freq/1e6, spectra);
+grid on;
+xlabel('Frequency [MHz]');
+ylabel('PSD');rx_sig_total = add_awgn(pa_out, snr_db);
 
 % RX DFE - מחזיר מטריצה שבה כל שורה/עמודה היא Carrier
 rx_sig = rx_dfe(rx_sig_total, config);
